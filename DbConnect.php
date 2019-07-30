@@ -2,7 +2,7 @@
 
     class DbConnect {
         private $server='localhost';
-        private $dbname='jwtapi';
+        private $dbname='tiffinapp';
         private $user='root';
         private $password='';
         

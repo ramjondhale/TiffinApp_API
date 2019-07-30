@@ -18,7 +18,7 @@
             $db = new DbConnect;
 			$this->dbConn = $db->connect();
 
-			if( 'generatetoken' != strtolower( $this->serviceName) ) {
+			if( 'generatetoken' != strtolower( $this->serviceName) && 'createaccount' != strtolower( $this->serviceName)) {
 				$this->validateToken();
 			}
         }
@@ -90,7 +90,7 @@
             try{
                 $token=$this->getBearerToken();
                 $payload = JWT::decode($token,SECRETE_KEY,['HS256']);
-                $stmt = $this->dbConn->prepare("SELECT * FROM users WHERE  id = :userId ");
+                $stmt = $this->dbConn->prepare("SELECT * FROM customers WHERE  id = :userId ");
                 $stmt->bindParam(":userId", $payload->userId);                
                 $stmt->execute();
                 $user = $stmt->fetch(PDO::FETCH_ASSOC);
