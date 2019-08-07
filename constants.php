@@ -21,6 +21,7 @@
 	define('USER_NOT_ACTIVE', 						109);
 
 	define('SUCCESS_RESPONSE', 						200);
+	define('ERROR',                                 110);
 
 	/*Server Errors*/
 

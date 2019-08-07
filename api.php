@@ -6,7 +6,8 @@
         {
             parent::__construct();                        
         }
-
+// *****************************************************************************************************************************************
+// *****************************API FOR USERS DATA***********************************************************************
         public function generateToken() {
            $email=$this->validateParameter('email',$this->param['email'],STRING);
            $password=$this->validateParameter('password',$this->param['password'],STRING);
@@ -61,12 +62,12 @@
                 $cust->setActive(1);   
                 $cust->setCreatedOn(date('d-m-Y'));
                 if(!$cust->insert()) {
-                    $message='Failed to insert.';
+                    $this->throwError(ERROR, 'Failed to insert.');
                 }else{
-                    $message='Inserted successfuly.';                    
+                    $this->returnResponse(SUCCESS_RESPONSE, 'Inserted successfuly.');                    
                 }
 
-                $this->returnResponse(SUCCESS_RESPONSE,$message);
+               
     
         }
     
@@ -127,7 +128,48 @@
         //     }
         //     $this->returnResponse(SUCCESS_RESPONSE,$message);
         // }
+// *****************************************************************************************************************************************
+// *****************************API FOR Features DATA***********************************************************************
+        public function getAllFeatures() {
+            $feat= new Features;
+            $features= $feat->getFeatures();
+            if(!is_array($features)) {
+                $this->returnResponse(SUCCESS_RESPONSE,['message'=>'Features not found']);
+            }
+           // print_r($features);
+           // $response['featureId']=$features['id'];
+           // $response['Feature']=$features['feature'];
+            $this->returnResponse(SUCCESS_RESPONSE,$features); 
 
+
+        }
+
+        public function addFeature() {
+            $feature=$this->validateParameter('feature',$this->param['feature'],STRING);
+
+            $feat = new Features;
+            $feat->setFeature($feature);
+
+            if(!$feat->insert()) {
+                $this->throwError(ERROR, 'Failed to insert.');
+            }else{
+                $this->returnResponse(SUCCESS_RESPONSE, 'Inserted successfuly.');                    
+            }
+        }
+
+        public function deleteFeature() {
+            $featureId=$this->validateParameter('featureId',$this->param['featureId'],INTEGER);
+
+            $feat =new Features;
+            $feat->setId($featureId);
+            
+            if(!$feat->delete()) {
+                $message ='Failed to delete';
+            } else {
+                $message ='Deleted  Successfully';
+            }
+            $this->returnResponse(SUCCESS_RESPONSE,$message);
+        }
     }
 
 ?>
