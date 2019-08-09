@@ -135,10 +135,7 @@
             $features= $feat->getFeatures();
             if(!is_array($features)) {
                 $this->returnResponse(SUCCESS_RESPONSE,['message'=>'Features not found']);
-            }
-           // print_r($features);
-           // $response['featureId']=$features['id'];
-           // $response['Feature']=$features['feature'];
+            }           
             $this->returnResponse(SUCCESS_RESPONSE,$features); 
 
 
@@ -151,9 +148,9 @@
             $feat->setFeature($feature);
 
             if(!$feat->insert()) {
-                $this->throwError(ERROR, 'Failed to insert.');
+                $this->throwError(ERROR, 'Failed to insert feature.');
             }else{
-                $this->returnResponse(SUCCESS_RESPONSE, 'Inserted successfuly.');                    
+                $this->returnResponse(SUCCESS_RESPONSE, 'feature inserted successfuly.');                    
             }
         }
 
@@ -164,9 +161,61 @@
             $feat->setId($featureId);
             
             if(!$feat->delete()) {
-                $message ='Failed to delete';
+                $message ='Failed to delete feature';
             } else {
-                $message ='Deleted  Successfully';
+                $message ='Feature deleted Successfully';
+            }
+            $this->returnResponse(SUCCESS_RESPONSE,$message);
+        }
+
+
+ // *****************************API FOR Features DATA***********************************************************************
+        public function getMenu() {
+            $men= new Menu;
+            $menu= $men->getMenu();
+            if(!is_array($menu)) {
+                $this->returnResponse(SUCCESS_RESPONSE,['message'=>'Menu not found']);
+            }           
+            $this->returnResponse(SUCCESS_RESPONSE,$menu); 
+
+
+        }
+
+        public function addMenu() {
+            $day=$this->validateParameter('day',$this->param['day'],STRING);
+            $bhaji=$this->validateParameter('bhaji',$this->param['bhaji'],STRING);
+            $sbhaji=$this->validateParameter('sbhaji',$this->param['sbhaji'],STRING);
+            $dal=$this->validateParameter('dal',$this->param['dal'],STRING);
+            $rice=$this->validateParameter('rice',$this->param['rice'],STRING);
+            $chapati=$this->validateParameter('chapati',$this->param['chapati'],STRING);
+            $extras=$this->validateParameter('extras',$this->param['extras'],STRING);
+           
+            $men = new Menu;
+            $men->setDay($day);
+            $men->setBhaji($bhaji);
+            $men->setSbhaji($sbhaji);
+            $men->setDal($dal);
+            $men->setRice($rice);
+            $men->setChapati($chapati);
+            $men->setExtras($extras);
+
+            if(!$men->insert()) {
+                $this->throwError(ERROR, 'Failed to insert menu.');
+            }else{
+                $this->returnResponse(SUCCESS_RESPONSE, 'Menu inserted successfuly.');                    
+            }
+        }
+
+        public function deleteMenu() {
+            $menuId=$this->validateParameter('menuId',$this->param['menuId'],INTEGER);
+
+            $men =new Menu;
+            $men->setId($menuId);
+            
+            if(!$men->delete()) {
+                $message ='Failed to delete menu';
+            } else {
+                $message ='Menu deleted  Successfully';
             }
             $this->returnResponse(SUCCESS_RESPONSE,$message);
         }
