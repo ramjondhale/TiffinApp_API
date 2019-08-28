@@ -281,25 +281,58 @@
 
         }
 
+        public function getCurrentOrders() {
+            $sub= new SubscribedPlans;
+            $sub->setCust_id($this->userId);
+           
+            $subscribed_plans= $sub->getCurrentOrder();
+            if(!is_array($subscribed_plans)) {
+                $this->returnResponse(SUCCESS_RESPONSE,['message'=>'No plans Subscribed!']);
+            }           
+            $this->returnResponse(SUCCESS_RESPONSE,$subscribed_plans); 
+
+        }
+
         public function addSubscribedPlan() {
-            $cust_id=$this->validateParameter('cust_id',$this->param['cust_id'],INTEGER);
-            $subscription_id=$this->validateParameter('subscription_id',$this->param['subscription_id'],INTEGER);
-            $start_date=$this->validateParameter('start_date',$this->param['start_date'],STRING);
-            $remaining_tiffin=$this->validateParameter('remaining_tiffin',$this->param['remaining_tiffin'],INTEGER);
-            $payment_id=$this->validateParameter('payment_id',$this->param['payment_id'],INTEGER);
+            // $cust_id=$this->validateParameter('cust_id',$this->param['cust_id'],INTEGER);
+            $subscription_id=$this->validateParameter('subscription_id',$this->param['subscription_id'],INTEGER);            
+            $remaining_tiffin=$this->validateParameter('remaining_tiffin',$this->param['remaining_tiffin'],INTEGER);            
             
             $sub = new SubscribedPlans;
-            $sub->setCust_id($cust_id);
-            $sub->setSubscription_id($subscription_id);
-            $sub->setStart_date($start_date);
+            $sub->setCust_id($this->userId);
+            $sub->setStart_date(date('Y-m-d'));
+            $sub->setSubscription_id($subscription_id);           
             $sub->setRemaining_tiffin($remaining_tiffin);
-            $sub->setPayment_id($payment_id);                     
+            $sub->setStatus('pending');                            
 
             if(!$sub->insert()) {
                 $this->throwError(ERROR, 'Failed to insert Subscribed Plan.');
             }else{
-                $this->returnResponse(SUCCESS_RESPONSE, 'Subscribed Successfully.');                    
+                
+                $this->getCurrentOrders();
+                //$this->returnResponse(SUCCESS_RESPONSE,'Order Initiated');                
             }
+        }
+
+        public function updatePayment() {
+            $payment_id=$this->validateParameter('payment_id',$this->param['payment_id'],STRING,false);
+            $status=$this->validateParameter('status',$this->param['status'],STRING);  
+            $id=$this->validateParameter('id',$this->param['id'],INTEGER);      
+           
+            
+                $sub = new SubscribedPlans;
+                $sub->setId($id);
+                $sub->setPayment_id($payment_id);
+                $sub->setStatus($status);                
+               
+                if(!$sub->updateOrder()) {
+                    $message='Failed to update.';
+                }else{
+                    $message='Updated successfuly.';                    
+                }
+
+                $this->returnResponse(SUCCESS_RESPONSE,$message);
+    
         }
 
         public function deleteSubscribedPlan() {
