@@ -9,17 +9,17 @@
 // *****************************************************************************************************************************************
 // *****************************API FOR USERS DATA***********************************************************************
         public function generateToken() {
-           $email=$this->validateParameter('email',$this->param['email'],STRING);
+           $mobile=$this->validateParameter('mobile',$this->param['mobile'],STRING);
            $password=$this->validateParameter('password',$this->param['password'],STRING);
            try{
-            $stmt = $this->dbConn->prepare("SELECT * FROM customers WHERE  email = :email AND password = :password");
-            $stmt->bindParam(":email", $email);
+            $stmt = $this->dbConn->prepare("SELECT * FROM customers WHERE  mobile = :mobile AND password = :password");
+            $stmt->bindParam(":mobile", $mobile);
             $stmt->bindParam(":password", $password);
             $stmt->execute();
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
             if(!is_array($user))
             {
-                $this->returnResponse(INVALID_USER_PASS,"Email or Password is incorrect.");
+                $this->returnResponse(INVALID_USER_PASS,"Mobile or Password is incorrect.");
             }
             if($user['active']==0){
                 $this->returnResponse(USER_NOT_ACTIVE,"User is not activated.Plese contact to admin.");
@@ -44,12 +44,16 @@
         }
 
         public function createAccount() {
-            $fname=$this->validateParameter('fname',$this->param['fname'],STRING,false);
-            $lname=$this->validateParameter('lname',$this->param['lname'],STRING,false);
-            $mobile=$this->validateParameter('mobile',$this->param['mobile'],INTEGER,false);
+            $fname=$this->validateParameter('fname',$this->param['fname'],STRING);
+            $lname=$this->validateParameter('lname',$this->param['lname'],STRING);
+            $mobile=$this->validateParameter('mobile',$this->param['mobile'],INTEGER);
             $email=$this->validateParameter('email',$this->param['email'],STRING,false);
-            $password=$this->validateParameter('password',$this->param['password'],STRING,false);
-            $paddress=$this->validateParameter('paddress',$this->param['paddress'],STRING,false);
+            $password=$this->validateParameter('password',$this->param['password'],STRING);
+            $flat_no=$this->validateParameter('flat_no',$this->param['flat_no'],STRING,false);
+            $landmark=$this->validateParameter('landmark',$this->param['landmark'],STRING,false);
+            $building=$this->validateParameter('building',$this->param['building'],STRING,false);
+            $area=$this->validateParameter('area',$this->param['area'],STRING);
+            
 
             
                 $cust = new Customer;
@@ -58,9 +62,12 @@
                 $cust->setMobile($mobile);
                 $cust->setEmail($email);
                 $cust->setPassword($password);
-                $cust->setPaddress($paddress);   
+                $cust->setFlat_no($flat_no);
+                $cust->setLandmark($landmark);
+                $cust->setBuilding($building);  
+                $cust->setArea($area);
                 $cust->setActive(1);   
-                $cust->setCreatedOn(date('d-m-Y'));
+                $cust->setCreatedOn(date('Y-m-d'));
                 if(!$cust->insert()) {
                     $this->throwError(ERROR, 'Failed to insert.');
                 }else{
@@ -69,19 +76,8 @@
     
         }
     
-        public function getCustomerById() {
-            $customerId=$this->validateParameter('customerId',$this->param['customerId'],INTEGER);
+        public function getCustomerDetails() {         
 
-            $cust =new Customer;
-            $cust->setId($customerId);
-            $customer=$cust->getCustomerDetailsById();
-            if(!is_array($customer)) {
-                $this->returnResponse(SUCCESS_RESPONSE,['message'=>'Customer Details not found.']);
-            }             
-            $this->returnResponse(SUCCESS_RESPONSE,$customer);    
-        }
-
-        public function getUserDetails() {
             $cust =new Customer;
             $cust->setId($this->userId);
             $customer=$cust->getCustomerDetailsById();
@@ -90,8 +86,8 @@
             }             
             $this->returnResponse(SUCCESS_RESPONSE,$customer);    
         }
-        
 
+        
 
         // public function updateCustomer() {
         //     $customerId=$this->validateParameter('customerId',$this->param['customerId'],INTEGER);
@@ -303,7 +299,8 @@
             $sub->setStart_date(date('Y-m-d'));
             $sub->setSubscription_id($subscription_id);           
             $sub->setRemaining_tiffin($remaining_tiffin);
-            $sub->setStatus('pending');                            
+            $sub->setStatus('pending');    
+                            
 
             if(!$sub->insert()) {
                 $this->throwError(ERROR, 'Failed to insert Subscribed Plan.');
@@ -323,7 +320,7 @@
                 $sub = new SubscribedPlans;
                 $sub->setId($id);
                 $sub->setPayment_id($payment_id);
-                $sub->setStatus($status);                
+                $sub->setStatus($status);                             
                
                 if(!$sub->updateOrder()) {
                     $message='Failed to update.';
@@ -341,6 +338,7 @@
             $sub =new SubscribedPlans;
             $sub->setId($subId);
             
+            
             if(!$sub->delete()) {
                 $message ='Failed to delete Subscribed Plan';
             } else {
@@ -348,6 +346,126 @@
             }
             $this->returnResponse(SUCCESS_RESPONSE,$message);
         }
-    }
+// *****************************API For Order Data***********************************************************************
+        public function addOrder() {           
+            $subscription_id=$this->validateParameter('subscription_id',$this->param['subscription_id'],INTEGER);            
+            $start_date=$this->validateParameter('start_date',$this->param['start_date'],STRING);       
+            $tiffin_time=$this->validateParameter('tiffin_time',$this->param['tiffin_time'],STRING);
+            $remaining_tiffin=$this->validateParameter('remaining_tiffin',$this->param['remaining_tiffin'],INTEGER);
+           
+            $stmt = $this->dbConn->prepare("SELECT id FROM location WHERE  cust_id = :cust_id ");
+            $stmt->bindParam(":cust_id", $this->userId);          
+            $stmt->execute();
+            $locationId = $stmt->fetch(PDO::FETCH_ASSOC);      
+                       
+            $order = new Order;
+            $order->setCust_id($this->userId);            
+            $order->setSubscription_id($subscription_id);           
+            $order->setTiffin_time($tiffin_time);
+            $order->setTiffin_type('veg');
+            $order->setLocation_id($locationId['id']);
+            $order->setOrder_status('Order Placed'); 
+              
+            if($tiffin_time=='Both')
+            {   
+                $sub =new SubscribedPlans;
+                $sub->setId($subscription_id);
+                $edate= strtotime($start_date);
+                $end_date = strtotime("+".($remaining_tiffin/2-1)."day", $edate);
+                $sub->setEnd_date(date('Y-m-d', $end_date));
+                $sub->updateEndDate();
 
+             
+                for( $i = 0; $i<($remaining_tiffin/2); $i++ ) {
+                    $sdate= strtotime($start_date);
+                    $order_date = strtotime("+".$i."day", $sdate);
+                    $order->setOrder_date(date('Y-m-d', $order_date)); 
+                    $order->setTiffin_time('Lunch');                      
+                    $order->insertOrder();               
+                   
+                 }
+                 for( $i = 0; $i<($remaining_tiffin/2); $i++ ) {
+                    $sdate= strtotime($start_date);
+                    $order_date = strtotime("+".$i."day", $sdate);
+                    $order->setOrder_date(date('Y-m-d', $order_date)); 
+                    $order->setTiffin_time('Dinner');                       
+                    $order->insertOrder();               
+                   
+                 }
+            }
+            else{
+                    $sub =new SubscribedPlans;
+                    $sub->setId($subscription_id);
+                    $edate= strtotime($start_date);
+                    $end_date = strtotime("+".($remaining_tiffin-1)."day", $edate);
+                    $sub->setEnd_date(date('Y-m-d', $end_date));
+                    $sub->updateEndDate();
+
+
+                for( $i = 0; $i<$remaining_tiffin; $i++ ) {
+                    $sdate= strtotime($start_date);
+                    $order_date = strtotime("+".$i."day", $sdate);
+                    $order->setOrder_date(date('Y-m-d', $order_date));                       
+                    $order->insertOrder();  
+                     // if(!$order->insertOrder()) {
+                    //     $this->throwError(ERROR, 'Failed to insert Orders Plan.');
+                    // }else{               
+                      
+                    //     $this->returnResponse(SUCCESS_RESPONSE,'Order Placed Successfully');                
+                    // }              
+                   
+                 }
+            }            
+             $this->returnResponse(SUCCESS_RESPONSE,'Order Placed Successfully'); 
+           
+        }
+
+        public function getTodaysOrders() {
+           $order= new Order;
+           $order->setCust_id($this->userId);
+           $order->setOrder_date(date('Y-m-d'));
+           $todays_order=$order->getTodaysOrder();
+            if(!is_array($todays_order)) {
+                $this->returnResponse(SUCCESS_RESPONSE,['message'=>'No Order Found!']);
+            }
+            else {
+                $this->returnResponse(SUCCESS_RESPONSE,$todays_order); 
+            }      
+        }
+
+        public function getOrdersHistory() {
+            $order= new Order;
+            $order->setCust_id($this->userId);          
+            $order_history=$order->getOrderHistory();
+             if(!is_array($order_history)) {
+                 $this->returnResponse(SUCCESS_RESPONSE,['message'=>'No Orders Found!']);
+             }
+             else {
+                 $this->returnResponse(SUCCESS_RESPONSE,$order_history); 
+             }      
+         }
+
+         public function updateOrderDates() {
+           
+            $subscription_id=$this->validateParameter('subscription_id',$this->param['subscription_id'],INTEGER);
+            $order_date=$this->validateParameter('order_date',$this->param['order_date'],STRING);
+
+            $order =new Order;
+            $order->setCust_id($this->userId);
+            $order->setSubscription_id($subscription_id);
+            $order->setOrder_date($order_date);             
+ 
+            
+            if(!$order->updateOrderDate()) {
+                $message ='Failed to update Order';
+            } else {
+                $message ='Order update Successfully';
+            }
+            $this->returnResponse(SUCCESS_RESPONSE,$message);
+        }
+ 
+
+
+
+    }
 ?>

@@ -7,7 +7,8 @@
         private $price;
         private $total_tiffin;
         private $thumbnail;
-        
+        private $active;
+                
         private $tableName = 'subscriptions';
         private $dbConn;
 
@@ -25,6 +26,8 @@
         function getTotal_tiffin() { return $this->total_tiffin; }
         function setPrice($price) { $this->price = $price; }
         function getPrice() { return $this->price; }
+        function setActive($active) { $this->active = $active; }
+        function getActive() { return $this->active; }
        
 
         public function __construct() {
@@ -55,6 +58,20 @@
 		    } else {
 				return false;
 			}         
+        }
+
+        public function deactivate() {
+            $sql = "UPDATE $this->tableName SET active = :active WHERE id = :id";
+
+			$stmt = $this->dbConn->prepare($sql);
+			$stmt->bindParam(':id', $this->id);
+			$stmt->bindParam(':active', $this->active);
+           
+			if($stmt->execute()) {
+				return true;
+			} else {
+				return false;
+			}
         }
         
         public function delete() {

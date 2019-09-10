@@ -6,9 +6,12 @@
 		private $mobile;	
 		private $email;			
 		private $password;	
-		private $paddress;	
 		private $active;
 		private $createdOn;
+		private $flat_no;
+		private $landmark;
+		private $building;
+		private $area;
 		private $tableName = 'customers';
 		private $dbConn;
 
@@ -24,8 +27,14 @@
 		function getEmail() { return $this->email; }
 		function setPassword($password) { $this->password = $password; }
 		function getPassword() { return $this->password; }
-		function setPaddress($paddress) { $this->paddress = $paddress; }
-		function getPaddress() { return $this->paddress; }		
+		function setFlat_no($flat_no) { $this->flat_no = $flat_no; }
+		function getFlat_no() { return $this->flat_no; }	
+		function setLandmark($landmark) { $this->landmark = $landmark; }
+		function getLandmark() { return $this->landmark; }	
+		function setBuilding($building) { $this->building = $building; }
+		function getBuilding() { return $this->building; }	
+		function setArea($area) { $this->area = $area; }
+		function getArea() { return $this->area; }		
 		function setActive($active) { $this->active = $active; }
 		function getActive() { return $this->active; }
 		function setCreatedOn($createdOn) { $this->createdOn = $createdOn; }
@@ -62,8 +71,8 @@
             $user = $stmt1->fetch(PDO::FETCH_ASSOC);
             if(!is_array($user))
             {
-				$sql = 'INSERT INTO ' . $this->tableName . '(id, fname, lname, mobile, email, password, paddress, active, created_on) VALUES(null, :fname,
-				:lname, :mobile, :email, :password, :paddress, :active, :createdOn)';
+				$sql = 'INSERT INTO ' . $this->tableName . '(id, fname, lname, mobile, email, password, flat_no, landmark, building, area, active, created_on) VALUES(null, :fname,
+				:lname, :mobile, :email, :password, :flat_no, :landmark, :building, :area, :active, :createdOn)';
    
 			   $stmt = $this->dbConn->prepare($sql);
 			   $stmt->bindParam(':fname', $this->fname);
@@ -71,9 +80,13 @@
 			   $stmt->bindParam(':mobile', $this->mobile);
 			   $stmt->bindParam(':email', $this->email);
 			   $stmt->bindParam(':password', $this->password);
-			   $stmt->bindParam(':paddress', $this->paddress);			
+			   $stmt->bindParam(':flat_no', $this->flat_no);
+			   $stmt->bindParam(':landmark', $this->landmark);
+			   $stmt->bindParam(':building', $this->flat_no);
+			   $stmt->bindParam(':area', $this->area);		
 			   $stmt->bindParam(':active', $this->active);
 			   $stmt->bindParam(':createdOn', $this->createdOn);
+			  
 			   
 			   if($stmt->execute()) {
 				   return true;

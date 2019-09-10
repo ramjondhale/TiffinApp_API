@@ -7,6 +7,8 @@
         private $remaining_tiffin;       
         private $payment_id;
         private $status;
+        private $end_date;
+
         
         private $tableName = 'subscribed_plans';
         private $dbConn;
@@ -19,6 +21,8 @@
         function getSubscription_id() { return $this->subscription_id; }
         function setStart_date($start_date) { $this->start_date = $start_date; }
         function getStart_date() { return $this->start_date; }
+        function setEnd_date($end_date) { $this->end_date = $end_date; }
+        function getEnd_date() { return $this->end_date; }
         function setRemaining_tiffin($remaining_tiffin) { $this->remaining_tiffin = $remaining_tiffin; }
         function getRemaining_tiffin() { return $this->remaining_tiffin; }
         function setPayment_id($payment_id) { $this->payment_id = $payment_id; }
@@ -33,15 +37,17 @@
         }
         
         public function getSubscribedPlans() {
-			$stmt = $this->dbConn->prepare("SELECT sd.id,s.type,s.title,s.total_tiffin,s.description,s.thumbnail,s.price,sd.remaining_tiffin FROM subscriptions s,subscribed_plans sd 
-            WHERE s.id=sd.subscription_id AND sd.cust_id=:cust_id AND sd.status='successful' ");
+			$stmt = $this->dbConn->prepare("SELECT sd.id,sd.start_date,s.type,s.title,s.total_tiffin,s.description,s.thumbnail,s.price,
+            sd.remaining_tiffin FROM subscriptions s,subscribed_plans sd 
+            WHERE s.id=sd.subscription_id AND sd.cust_id=:cust_id AND sd.status='successful' AND sd.end_date>=:cur_date ");
             $stmt->bindParam(':cust_id', $this->cust_id);
+            $stmt->bindParam(':cur_date',date('Y-m-d'));
 			$stmt->execute();
 			$subscribed_plans= $stmt->fetchAll(PDO::FETCH_ASSOC);
 			return $subscribed_plans;
         }
         public function getCurrentOrder() {
-            $stmt = $this->dbConn->prepare("SELECT sd.*,s.price FROM subscriptions s,subscribed_plans sd 
+            $stmt = $this->dbConn->prepare("SELECT sd.*,s.price,s.tiffin_time FROM subscriptions s,subscribed_plans sd 
             WHERE s.id=sd.subscription_id AND sd.cust_id=:cust_id AND sd.payment_id IS NULL AND sd.status='pending' ");
             $stmt->bindParam(':cust_id', $this->cust_id);
             //$stmt->bindParam(':payment_id',$this->payment_id);
@@ -53,14 +59,15 @@
         }
         
         public function insert() {			
-            $sql = 'INSERT INTO ' . $this->tableName . '(id, cust_id, subscription_id, start_date, remaining_tiffin, status) 
-            VALUES(null, :cust_id, :subscription_id, :start_date, :remaining_tiffin, :status)';   
+            $sql = 'INSERT INTO ' . $this->tableName . '(id, cust_id, subscription_id, start_date, remaining_tiffin, status, end_date) 
+            VALUES(null, :cust_id, :subscription_id, :start_date, :remaining_tiffin, :status, :end_date)';   
 			$stmt = $this->dbConn->prepare($sql);
             $stmt->bindParam(':cust_id', $this->cust_id);
             $stmt->bindParam(':subscription_id', $this->subscription_id);
             $stmt->bindParam(':start_date', $this->start_date);
             $stmt->bindParam(':remaining_tiffin', $this->remaining_tiffin);   
-            $stmt->bindParam(':status', $this->status);               
+            $stmt->bindParam(':status', $this->status); 
+            $stmt->bindParam(':end_date', $this->end_date); 
             //$stmt->bindParam(':payment_id', $this->payment_id);
            		   
 			if($stmt->execute()) {
@@ -87,13 +94,29 @@
 			$stmt = $this->dbConn->prepare($sql);
 			$stmt->bindParam(':id', $this->id);
 			$stmt->bindParam(':payment_id', $this->payment_id);
-			$stmt->bindParam(':status', $this->status);
+            $stmt->bindParam(':status', $this->status);
+           
 			if($stmt->execute()) {
 				return true;
 			} else {
 				return false;
 			}
-		}
+        }
+        public function updateEndDate() {
+			
+			$sql = "UPDATE $this->tableName SET  end_date = :end_date WHERE id = :id";
+
+			$stmt = $this->dbConn->prepare($sql);
+			$stmt->bindParam(':id', $this->id);
+            $stmt->bindParam(':end_date', $this->end_date);
+           
+			if($stmt->execute()) {
+				return true;
+			} else {
+				return false;
+			}
+        }
+        
 
     }
 ?>
